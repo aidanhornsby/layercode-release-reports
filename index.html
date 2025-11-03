@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layercode Product Release Reports</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>Layercode Product Release Reports</h1>
+        <p class="subtitle">Track what we shipped and ask questions about our updates</p>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        <!-- Date Range Picker Section -->
+        <section class="date-picker-section">
+            <div class="date-picker-container">
+                <div class="date-input-group">
+                    <label for="start-date">Start Date</label>
+                    <input type="date" id="start-date" class="date-input" />
+                    <span class="error-message" id="start-date-error"></span>
+                </div>
+                
+                <div class="date-separator">→</div>
+                
+                <div class="date-input-group">
+                    <label for="end-date">End Date</label>
+                    <input type="date" id="end-date" class="date-input" />
+                    <span class="error-message" id="end-date-error"></span>
+                </div>
+                
+                <button id="generate-btn" class="generate-btn">
+                    <span class="btn-text">Generate Report</span>
+                    <span class="btn-loader" style="display: none;">
+                        <svg class="spinner" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"/>
+                            <path fill="currentColor" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                        </svg>
+                    </span>
+                </button>
+            </div>
+            
+            <div class="range-error" id="range-error" style="display: none;"></div>
+        </section>
+
+        <!-- Content Grid -->
+        <div class="content-grid" id="content-grid" style="display: none;">
+            <!-- Left: Commit List -->
+            <section class="commits-panel">
+                <div class="panel-header">
+                    <h2>Commits</h2>
+                    <span class="commit-count" id="commit-count"></span>
+                </div>
+                
+                <div class="commits-container" id="commits-container">
+                    <!-- Commits will be populated here -->
+                </div>
+            </section>
+
+            <!-- Right: Blog Summary -->
+            <section class="summary-panel">
+                <div class="panel-header">
+                    <h2 id="summary-title">What We Shipped</h2>
+                </div>
+                
+                <div class="summary-container" id="summary-container">
+                    <!-- Summary will be populated here -->
+                </div>
+                
+                <div class="summary-footer" id="summary-footer" style="display: none;">
+                    <!-- Meta info will be populated here -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Error Display -->
+        <div class="error-display" id="error-display" style="display: none;">
+            <div class="error-icon">⚠️</div>
+            <div class="error-content">
+                <h3>Error</h3>
+                <p id="error-message"></p>
+                <button class="retry-btn" onclick="document.getElementById('generate-btn').click()">Try Again</button>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state" style="display: none;">
+            <div class="empty-icon">📦</div>
+            <h3>No Releases Found</h3>
+            <p>There are no commits in the selected date range. Try adjusting your dates.</p>
+        </div>
+    </main>
+
+    <!-- Voice Agent Widget -->
+    <button class="voice-fab" id="voice-fab" aria-label="Open voice agent">
+        <svg class="mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+    </button>
+
+    <!-- Voice Modal -->
+    <div class="voice-modal" id="voice-modal" style="display: none;">
+        <div class="voice-modal-content">
+            <div class="voice-modal-header">
+                <h2>Voice Agent</h2>
+                <button class="close-btn" id="close-voice-modal" aria-label="Close voice agent">✕</button>
+            </div>
+            
+            <div class="voice-body">
+                <!-- Example Prompts -->
+                <div class="example-prompts" id="example-prompts">
+                    <h3>Try asking:</h3>
+                    <div class="prompt-chips">
+                        <button class="prompt-chip" data-prompt="What features did we ship last week?">
+                            What features did we ship last week?
+                        </button>
+                        <button class="prompt-chip" data-prompt="Tell me about authentication updates">
+                            Tell me about authentication updates
+                        </button>
+                        <button class="prompt-chip" data-prompt="What bugs were fixed?">
+                            What bugs were fixed?
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Conversation Container -->
+                <div class="conversation-container" id="conversation-container">
+                    <!-- Messages will appear here -->
+                </div>
+            </div>
+
+            <!-- Voice Controls -->
+            <div class="voice-controls">
+                <div class="mic-status" id="mic-status">Ready to listen</div>
+                <button class="mic-btn" id="mic-btn" aria-label="Start/Stop recording">
+                    <svg class="mic-icon-large" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" y1="19" x2="12" y2="23"/>
+                        <line x1="8" y1="23" x2="16" y2="23"/>
+                    </svg>
+                </button>
+                <div class="waveform-container" id="waveform-container">
+                    <div class="waveform-bar"></div>
+                    <div class="waveform-bar"></div>
+                    <div class="waveform-bar"></div>
+                    <div class="waveform-bar"></div>
+                    <div class="waveform-bar"></div>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div class="voice-error" id="voice-error" style="display: none;">
+                <p id="voice-error-message"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Skeleton -->
+    <template id="commit-skeleton">
+        <div class="commit-card skeleton">
+            <div class="commit-header skeleton-line"></div>
+            <div class="commit-message skeleton-line"></div>
+        </div>
+    </template>
+
+    <script src="script.js"></script>
+</body>
+</html>
