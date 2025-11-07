@@ -1,53 +1,53 @@
-# Layercode Product Release Reports - Frontend
+# Layercode Product Release Reports
 
-A modern, responsive web application for viewing and exploring product release reports with voice agent capabilities.
+Full-stack Next.js app that generates internal release notes by pulling live commit data from GitHub and summarising it with the OpenAI GPT-5 model via the Vercel AI SDK.
 
 ## Features
 
-- **Date Range Picker**: Select any date range (up to 30 days) to view releases
-- **Commit List**: Browse detailed commit information with author avatars
-- **AI-Generated Summary**: Read plain-English summaries of what was shipped
-- **Voice Agent**: Interact with release data through voice commands (backend integration required)
-- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
+- **Single endpoint (`GET /deploy-report`)** that validates the requested date window and enforces a 30-day cap.
+- **Live GitHub fetch** using the provided access token; merge commits are automatically filtered out.
+- **LLM summary generation** via Vercel AI SDK + `openai/gpt-5`, returning semantic HTML without background jobs.
+- **Responsive React UI** that matches the original colour palette while upgrading to the Next.js app router.
+- **Spec-compliant error handling** for validation, rate limits, upstream failures, and the 120 s timeout budget.
 
-## File Structure
+## Getting Started
 
-```
-.
-├── index.html      # Main HTML structure
-├── styles.css      # All styling and responsive design
-├── script.js       # JavaScript logic and API integration
-└── README.md       # This file
-```
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-## Setup
+2. **Configure environment variables**
+   ```bash
+   cp .env.local.example .env.local
+   # then edit .env.local with real values
+   ```
 
-1. Ensure you have the backend API running with the `/deploy-report` endpoint
-2. Open `index.html` in a modern web browser
-3. For production, serve via a web server (e.g., `python -m http.server` or `npx serve`)
+   Required keys:
+   - `GITHUB_TOKEN` – token with read access to the target repo
+   - `GITHUB_REPO` – `OWNER/REPO`
+   - `OPENAI_API_KEY` – OpenAI API key with access to GPT-5 (Responses API)
+   - `OPENAI_MODEL` – e.g. `gpt-5` (falls back to `OPENAI_REALTIME_MODEL` for backwards compatibility).  
+     Use the bare model name—any provider prefix like `openai/` is stripped automatically.
 
-## Usage
+3. **Run locally**
+   ```bash
+   npm run dev
+   ```
 
-### Generating a Report
+   The app serves both the UI and the `/deploy-report` route at `http://localhost:3000`.
 
-1. Select your desired start and end dates using the date pickers
-2. Click "Generate Report" to fetch data from the backend
-3. View the commit list and AI-generated summary side-by-side
+## API Contract
 
-### Using the Voice Agent
+`GET /deploy-report?start=YYYY-MM-DD&end=YYYY-MM-DD`
 
-1. Click the microphone FAB (floating action button) in the bottom-right corner
-2. Grant microphone permissions when prompted
-3. Either click example prompts or use the microphone to ask questions
-4. View transcripts and responses in the conversation panel
+- Validates input format, enforces `start <= end`, and rejects ranges > 30 days (`413`).
+- Queries GitHub commits in `[startT00:00:00Z, endT23:59:59Z]`, paginating `per_page=100`.
+- Drops merge commits (multiple parents or messages that begin with “Merge”).
+- Builds compact bullets and requests a semantic HTML report from OpenAI GPT-5 via Vercel AI SDK.
 
-## Backend API Integration
+### 200 Response
 
-The frontend expects a backend API at `/deploy-report` with the following contract:
-
-### Endpoint: `GET /deploy-report?start=YYYY-MM-DD&end=YYYY-MM-DD`
-
-**Expected Response (200):**
 ```json
 {
   "repo": "OWNER/REPO",
@@ -73,57 +73,26 @@ The frontend expects a backend API at `/deploy-report` with the following contra
 }
 ```
 
-**Error Responses:**
-- `400` - Missing/invalid dates
-- `413` - Date range exceeds 30 days
-- `429` - Rate limit exceeded
-- `502` - Backend service error
-- `504` - Request timeout
+### Error Responses
 
-## Configuration
+- `400` – Missing or invalid dates, `start > end`
+- `413` – Date span over 30 days
+- `429` – GitHub secondary rate limit surfaced
+- `502` – Upstream provider failure (GitHub/OpenAI)
+- `504` – Total processing time exceeded 120 s
 
-Edit the `API_BASE_URL` constant in `script.js` to point to your backend:
+## Frontend Notes
 
-```javascript
-const API_BASE_URL = '/deploy-report'; // Change to your backend URL
-```
+- Retains the original layout, palettes, and interaction patterns.
+- Uses React state to handle validation, loaders, error surfaces, and empty states.
+- Inserts the `summary_html` block with `dangerouslySetInnerHTML`; keep upstream prompt constrained to semantic HTML.
 
-## Browser Support
+## Testing & Deployment Tips
 
-- Chrome (latest 2 versions)
-- Firefox (latest 2 versions)
-- Safari (latest 2 versions)
-- Edge (latest 2 versions)
-- Mobile browsers (iOS Safari, Chrome Mobile)
-
-## Voice Agent Notes
-
-The voice agent UI is fully implemented with placeholder functions for backend integration. To complete the voice functionality, you'll need to:
-
-1. Implement WebSocket connection to OpenAI Realtime API
-2. Add audio capture and processing
-3. Handle streaming responses from the voice agent
-4. Add proper error handling for audio/microphone issues
-
-See `script.js` for placeholder functions marked with `// TODO:` comments.
-
-## Accessibility
-
-The UI includes:
-- Keyboard navigation support
-- ARIA labels on interactive elements
-- High contrast mode support
-- Screen reader compatible structure
-- Reduced motion support
-
-## Performance
-
-- Initial load: < 2 seconds
-- Smooth 60fps animations
-- Optimized rendering for large commit lists
-- Lazy loading for conversation history
+- **Local smoke test:** `npm run dev`, hit `http://localhost:3000/deploy-report?start=YYYY-MM-DD&end=YYYY-MM-DD`.
+- **Timeout budget:** ensure repos with large commit history stay under 120 s; adjust the GitHub token’s rate limit if needed.
+- **Vercel deploy:** the project is App Router–ready. Add the four environment variables in the project settings before deploying.
 
 ## License
 
-Internal project - All rights reserved
-
+Internal project – all rights reserved.
