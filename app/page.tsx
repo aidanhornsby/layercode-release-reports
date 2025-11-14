@@ -128,59 +128,67 @@ export default function HomePage() {
 
   return (
     <>
-      <header className="header">
-        <h1>Layercode Product Release Reports</h1>
-        <p className="subtitle">Track what we shipped and generate shareable internal summaries.</p>
-      </header>
-
       <main className="main-container">
+        <div className="window-title-bar">
+          <div className="traffic-lights">
+            <div className="traffic-light red"></div>
+            <div className="traffic-light yellow"></div>
+            <div className="traffic-light green"></div>
+          </div>
+          <h2 className="window-title">Layercode Product Release Reports</h2>
+        </div>
+        <div className="window-content">
         <section className="date-picker-section">
           <div className="date-picker-container">
-            <div className="date-input-group">
-              <label htmlFor="start-date">Start Date</label>
-              <input
-                id="start-date"
-                className="date-input"
-                type="date"
-                value={start}
-                onChange={(event) => handleInputChange("start", event.target.value)}
-                max={formatDate(new Date())}
-              />
-              {errors.start && <span className="error-message">{errors.start}</span>}
+            <div className="date-inputs-wrapper">
+              <div className="date-input-group">
+                <label htmlFor="start-date">Start Date</label>
+                <input
+                  id="start-date"
+                  className="date-input"
+                  type="date"
+                  value={start}
+                  onChange={(event) => handleInputChange("start", event.target.value)}
+                  max={formatDate(new Date())}
+                />
+                {errors.start && <span className="error-message">{errors.start}</span>}
+              </div>
+
+              <div className="date-separator" aria-hidden="true">
+                →
+              </div>
+
+              <div className="date-input-group">
+                <label htmlFor="end-date">End Date</label>
+                <input
+                  id="end-date"
+                  className="date-input"
+                  type="date"
+                  value={end}
+                  onChange={(event) => handleInputChange("end", event.target.value)}
+                  max={formatDate(new Date())}
+                />
+                {errors.end && <span className="error-message">{errors.end}</span>}
+              </div>
             </div>
 
-            <div className="date-separator" aria-hidden="true">
-              →
+            <div className="button-wrapper">
+              <button type="button" className="generate-btn" onClick={handleSubmit} disabled={status === "loading"}>
+                <span className="btn-text">{status === "loading" ? "Generating..." : "Generate Report"}</span>
+                {status === "loading" && (
+                  <span className="btn-loader">
+                    <svg className="spinner" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" opacity="0.25" />
+                      <path
+                        fill="currentColor"
+                        opacity="0.75"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                  </span>
+                )}
+              </button>
             </div>
-
-            <div className="date-input-group">
-              <label htmlFor="end-date">End Date</label>
-              <input
-                id="end-date"
-                className="date-input"
-                type="date"
-                value={end}
-                onChange={(event) => handleInputChange("end", event.target.value)}
-                max={formatDate(new Date())}
-              />
-              {errors.end && <span className="error-message">{errors.end}</span>}
-            </div>
-
-            <button type="button" className="generate-btn" onClick={handleSubmit} disabled={status === "loading"}>
-              <span className="btn-text">{status === "loading" ? "Generating..." : "Generate Report"}</span>
-              {status === "loading" && (
-                <span className="btn-loader">
-                  <svg className="spinner" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" opacity="0.25" />
-                    <path
-                      fill="currentColor"
-                      opacity="0.75"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                </span>
-              )}
-            </button>
           </div>
           {errors.range && <div className="range-error">{errors.range}</div>}
         </section>
@@ -210,53 +218,55 @@ export default function HomePage() {
         {status === "success" && data && (
           <>
             <div className="content-grid">
-              <section className="commits-panel">
-                <div className="panel-header">
-                  <h2>Commits</h2>
-                  <span className="commit-count">
-                    {data.meta.commit_count} commit
-                    {data.meta.commit_count === 1 ? "" : "s"}
-                  </span>
-                </div>
-                <div className="commits-container">
-                  {hasCommits ? (
-                    data.commits.map((commit) => (
-                      <article className="commit-card" key={commit.sha}>
-                        <div className="commit-meta">
-                          <span className="commit-sha" title={commit.sha}>
-                            {commit.sha.slice(0, 7)}
-                          </span>
-                          <time dateTime={commit.date}>
-                            {new Date(commit.date).toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            })}
-                          </time>
-                        </div>
-                        <div className="commit-summary">{commit.summary_line || "No subject line provided."}</div>
-                        <div className="commit-author">
-                          {commit.author.login || commit.author.name || "Unknown author"}
-                        </div>
-                        <pre className="commit-message">{commit.message}</pre>
-                      </article>
-                    ))
-                  ) : (
-                    <div className="commits-empty">No commits found for this range.</div>
-                  )}
-                </div>
-              </section>
+              <div className="column-wrap">
+                <section className="commits-panel">
+                  <div className="panel-header">
+                    <h2>Commits</h2>
+                    <span className="commit-count">
+                      {data.meta.commit_count} commit
+                      {data.meta.commit_count === 1 ? "" : "s"}
+                    </span>
+                  </div>
+                  <div className="commits-container">
+                    {hasCommits ? (
+                      data.commits.map((commit) => (
+                        <article className="commit-card" key={commit.sha}>
+                          <div className="commit-meta">
+                            <span className="commit-sha" title={commit.sha}>
+                              {commit.sha.slice(0, 7)}
+                            </span>
+                            <time dateTime={commit.date}>
+                              {new Date(commit.date).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              })}
+                            </time>
+                          </div>
+                          <div className="commit-summary">{commit.summary_line || "No subject line provided."}</div>
+                          <div className="commit-author">
+                            {commit.author.login || commit.author.name || "Unknown author"}
+                          </div>
+                          <pre className="commit-message">{commit.message}</pre>
+                        </article>
+                      ))
+                    ) : (
+                      <div className="commits-empty">No commits found for this range.</div>
+                    )}
+                  </div>
+                </section>
 
-              <section className="summary-panel">
-                <div className="panel-header">
-                  <h2>What We Shipped</h2>
-                </div>
-                <div className="summary-container" dangerouslySetInnerHTML={{ __html: summaryHtml }} />
-                <div className="summary-footer">
-                  <div>Model: {data.meta.model}</div>
-                  <div>Generated: {new Date(data.meta.generated_at).toLocaleString()}</div>
-                </div>
-              </section>
+                <section className="summary-panel">
+                  <div className="panel-header">
+                    <h2>What We Shipped</h2>
+                  </div>
+                  <div className="summary-container" dangerouslySetInnerHTML={{ __html: summaryHtml }} />
+                  <div className="summary-footer">
+                    <div>Model: {data.meta.model}</div>
+                    <div>Generated: {new Date(data.meta.generated_at).toLocaleString()}</div>
+                  </div>
+                </section>
+              </div>
             </div>
           </>
         )}
@@ -301,6 +311,7 @@ export default function HomePage() {
             </section>
           </div>
         )}
+        </div>
       </main>
     </>
   );
